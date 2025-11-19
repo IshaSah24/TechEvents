@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Navbar from "./components/Navbar";
+import Prism from "./components/Prism";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,15 +21,27 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className="antialiased">
+        <Navbar />
+        <div className="absolute inset-0 top-0 z[-1] min-h-screen">
+          <Prism
+            animationType="rotate"
+            timeScale={0.1}
+            height={1}
+            baseWidth={1}
+            scale={5}
+            hueShift={-0.84}
+            colorFrequency={0.85}
+            noise={0}
+            glow={.8}
+          />
+        </div>
+        <main>{children}</main>
       </body>
     </html>
   );
