@@ -235,7 +235,7 @@ export default function HeroSection({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
-                className=" backdrop-blur-md p-6 relative z-10 mx-auto mb-120 max-w-md rounded-2xl border border-slate-800  p-6 shadow-xl lg:absolute lg:-bottom-8 lg:-right-8 lg:mt-0 lg:max-w-sm"
+                className=" backdrop-blur-md p-6 relative z-10 mx-auto lg:mb-120 max-w-md rounded-2xl border border-slate-800  p-6 shadow-xl lg:absolute lg:-bottom-8 lg:-right-8 lg:mt-0 lg:max-w-sm"
               >
                 <div className="mb-4 flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-900">
