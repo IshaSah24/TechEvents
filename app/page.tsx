@@ -85,7 +85,7 @@ const defaultLogos: Logo[] = [
     alt: "Partner 3",
   },
 ];
-
+ 
 const defaultHeroImage =
   "https://imgs.search.brave.com/loQXL8Xaf4dM-8yHX8mZPvuxNq-Zowc12aWVqFwkkX8/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly93d3cu/ZnJlZWNvZGVjYW1w/Lm9yZy9uZXdzL2Nv/bnRlbnQvaW1hZ2Vz/L3NpemUvdzIwMDAv/MjAyMy8wNS9FbGVn/YW50LVRyYXZlbC1C/bG9nLVlvdXR1YmUt/VGh1bWJuYWlsLnBu/Zw";
 
@@ -221,7 +221,7 @@ export default function HeroSection({
               transition={{ duration: 0.6, delay: 0.4 }}
               className="relative"
             >
-              <div className="relative overflow-hidden rounded-3xl shadow-2xl hover:scale-[1.02] transition-all duration-200">
+              <div className="relative overflow-hidden rounded-3xl shadow-2xl hover:scale-[1.01] transition-all duration-200">
                 <img
                   src={heroImageSrc}
                   alt="People at a tech event"
