@@ -221,7 +221,7 @@ export default function HeroSection({
               transition={{ duration: 0.6, delay: 0.4 }}
               className="relative"
             >
-              <div className="relative overflow-hidden rounded-3xl shadow-2xl hover:scale-[1.02] transition-all duration-200">
+              <div className="relative overflow-hidden rounded-3xl shadow-2xl hover:scale-[1.01] transition-all duration-200">
                 <img
                   src={heroImageSrc}
                   alt="People at a tech event"
