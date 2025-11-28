@@ -23,7 +23,6 @@ const AllEvents = ({
 }: Props) => {
   return (
     <div className="w-full">
-      {/* IMAGE + HOVER */}
       <Link
         href={href}
         className="group relative block overflow-hidden rounded-sm lg:rounded-full"
