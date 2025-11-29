@@ -17,6 +17,8 @@ export interface IEvent extends Document {
     tags: string[];
     createdAt: Date;
     updatedAt: Date;
+    seatsTotal: number;
+    seatsAvailable: number;
 }
 
 const EventSchema = new Schema<IEvent>(
@@ -102,25 +104,62 @@ const EventSchema = new Schema<IEvent>(
                 message: 'At least one tag is required',
             },
         },
+        // --- added seats fields ---
+        seatsTotal: {
+            type: Number,
+            required: [true, 'seatsTotal is required'],
+            min: [0, 'seatsTotal cannot be negative'],
+        },
+        seatsAvailable: {
+            type: Number,
+            required: [true, 'seatsAvailable is required'],
+            min: [0, 'seatsAvailable cannot be negative'],
+            validate: {
+                validator: function (value: number) {
+                    const doc: any = this;
+                    if (typeof doc.seatsTotal === 'number') {
+                        return value <= doc.seatsTotal;
+                    }
+                    return true;
+                },
+                message: 'seatsAvailable cannot exceed seatsTotal',
+            },
+        },
     },
     {
         timestamps: true,
     }
 );
 
+EventSchema.pre('validate', function (next) {
+    const evt: any = this;
+    if (evt.isNew) {
+        if (typeof evt.seatsTotal === 'number' && (evt.seatsAvailable === undefined || evt.seatsAvailable === null)) {
+            evt.seatsAvailable = evt.seatsTotal;
+        }
+    }
+    next();
+});
+
 EventSchema.pre('save', function (next) {
-    const event = this as IEvent;
+    const event = this as IEvent & { isNew?: boolean; isModified?: (s: string) => boolean };
 
-    if (event.isModified('title') || event.isNew) {
-        event.slug = generateSlug(event.title);
-    }
+    try {
+        if ((event as any).isModified?.('title') || (event as any).isNew) {
+            if ((event as any).title) {
+                (event as any).slug = generateSlug((event as any).title);
+            }
+        }
 
-    if (event.isModified('date')) {
-        event.date = normalizeDate(event.date);
-    }
+        if ((event as any).isModified?.('date')) {
+            (event as any).date = normalizeDate((event as any).date);
+        }
 
-    if (event.isModified('time')) {
-        event.time = normalizeTime(event.time);
+        if ((event as any).isModified?.('time')) {
+            (event as any).time = normalizeTime((event as any).time);
+        }
+    } catch (err) {
+        return next(err as Error);
     }
 
     next();
