@@ -31,10 +31,14 @@ const BookingSchema = new Schema<IBooking>(
   { timestamps: true }
 );
 
-BookingSchema.pre('save', async function (next) {
+// NOTE: use function() so `this` is the document; annotate `this` for TypeScript
+BookingSchema.pre('save', async function (this: IBooking, next) {
   const booking = this as IBooking;
 
-  if (booking.isModified('eventId') || booking.isNew) {
+  // isModified is a method on mongoose documents — guard if not present
+  const modified = (this as any).isModified ? (this as any).isModified.bind(this) : () => true;
+
+  if (modified('eventId') || (this as any).isNew) {
     try {
       const eventExists = await Event.exists({ _id: booking.eventId });
       if (!eventExists) {
@@ -49,7 +53,7 @@ BookingSchema.pre('save', async function (next) {
     }
   }
 
-  if (booking.isModified('userId') || booking.isNew) {
+  if (modified('userId') || (this as any).isNew) {
     try {
       const userExists = await User.exists({ _id: booking.userId });
       if (!userExists) {

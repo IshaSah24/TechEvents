@@ -5,7 +5,7 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'organizer';
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidate: string): Promise<boolean>;
@@ -14,10 +14,10 @@ export interface IUser extends Document {
 const UserSchema = new Schema<IUser>(
   {
     name: { 
-        type: String, 
-        required: true, 
-        trim: true, 
-        maxlength: 50 
+      type: String, 
+      required: true, 
+      trim: true, 
+      maxlength: 50 
     },
     email: {
       type: String,
@@ -32,28 +32,32 @@ const UserSchema = new Schema<IUser>(
     },
     password: { type: String, required: true, minlength: 6, select: false },
     role: { 
-        type: String, 
-        enum: ['user', 'admin'], 
-        default: 'user' 
+      type: String, 
+      enum: ['user', 'admin', 'organizer'], 
+      default: 'user' 
     },
   },
-  { 
-    timestamps: true }
+  { timestamps: true }
 );
 
-UserSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+UserSchema.pre('save', async function (this: IUser, next) {
+  if (!(this as any).isModified('password')) return next();
+  if (!this.password) return next();
+
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
     next();
-  } catch (err : any) {
+  } catch (err: any) {
     next(err);
   }
 });
 
-UserSchema.methods.comparePassword = function (candidatePassword: string) {
-  return bcrypt.compare(candidatePassword, (this as IUser).password);
+UserSchema.methods.comparePassword = async function (this: IUser, candidatePassword: string) {
+  if (!this.password) {
+    throw new Error('Password not selected. Use .select("+password") when querying the user for authentication.');
+  }
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
 UserSchema.index({ email: 1 }, { unique: true });
