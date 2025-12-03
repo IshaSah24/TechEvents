@@ -41,7 +41,7 @@ export default function RootLayout({
             glow={.8}
           />
         </div>
-        <main>{children}</main>
+        <main className="z-1">{children}</main>
       </body>
     </html>
   );
