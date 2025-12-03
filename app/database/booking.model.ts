@@ -1,79 +1,59 @@
-import { Schema, model, models, Document, Types } from 'mongoose';
-import Event from './events.model';
-import User from './user.model';
+import { Schema, model, models, Document, Types } from "mongoose";
 
 export interface IBooking extends Document {
   eventId: Types.ObjectId;
   userId: Types.ObjectId;
-  status: 'pending' | 'confirmed' | 'cancelled';
+  tickets: number;
+  amount: number;
+  paymentStatus: "unpaid" | "paid" | "failed";
+  status: "pending" | "confirmed" | "cancelled";
+  bookingRef: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
 const BookingSchema = new Schema<IBooking>(
   {
-    eventId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Event',
-      required: [true, 'Event ID is required'],
+    eventId: { type: Schema.Types.ObjectId, ref: "Event", required: true },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+
+    tickets: {
+      type: Number,
+      required: true,
+      min: [1, "Minimum 1 ticket"],
     },
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, 'User ID is required'],
+
+    amount: {
+      type: Number,
+      required: true,
+      min: [0, "Amount cannot be negative"],
     },
+
+    paymentStatus: {
+      type: String,
+      enum: ["unpaid", "paid", "failed"],
+      default: "unpaid",
+    },
+
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'cancelled'],
-      default: 'pending',
+      enum: ["pending", "confirmed", "cancelled"],
+      default: "pending",
+    },
+
+    bookingRef: {
+      type: String,
+      unique: true,
+      required: true,
+      default: () => `BK-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     },
   },
   { timestamps: true }
 );
 
-// NOTE: use function() so `this` is the document; annotate `this` for TypeScript
-BookingSchema.pre('save', async function (this: IBooking, next) {
-  const booking = this as IBooking;
+// Prevent duplicate booking for same user/event
+BookingSchema.index({ eventId: 1, userId: 1 }, { unique: true });
 
-  // isModified is a method on mongoose documents — guard if not present
-  const modified = (this as any).isModified ? (this as any).isModified.bind(this) : () => true;
+const Booking = models.Booking || model<IBooking>("Booking", BookingSchema);
 
-  if (modified('eventId') || (this as any).isNew) {
-    try {
-      const eventExists = await Event.exists({ _id: booking.eventId });
-      if (!eventExists) {
-        const err = new Error(`Event with ID ${booking.eventId} does not exist`);
-        err.name = 'ValidationError';
-        return next(err);
-      }
-    } catch (err: any) {
-      const error = new Error(`Invalid event ID format or DB error: ${err.message}`);
-      error.name = 'ValidationError';
-      return next(error);
-    }
-  }
-
-  if (modified('userId') || (this as any).isNew) {
-    try {
-      const userExists = await User.exists({ _id: booking.userId });
-      if (!userExists) {
-        const err = new Error(`User with ID ${booking.userId} does not exist`);
-        err.name = 'ValidationError';
-        return next(err);
-      }
-    } catch (err: any) {
-      const error = new Error(`Invalid user ID format or DB error: ${err.message}`);
-      error.name = 'ValidationError';
-      return next(error);
-    }
-  }
-
-  next();
-});
-
-BookingSchema.index({ eventId: 1, createdAt: -1 });
-BookingSchema.index({ userId: 1 });
-BookingSchema.index({ eventId: 1, userId: 1 }, { unique: true, name: 'uniq_event_user' });
-
-const Booking = models.Booking || model<IBooking>('Booking', BookingSchema);
 export default Booking;
