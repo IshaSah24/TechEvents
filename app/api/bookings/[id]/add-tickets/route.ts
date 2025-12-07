@@ -3,75 +3,107 @@ import { connectToDatabase } from "@/app/lib/mongodb";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-    let session: mongoose.ClientSession | null = null;
-    try {
-        await connectToDatabase();
-        const bookingId = params.id;
-        const body = await req.json();
-        const { additionalTickets = 0, paymentStatus = "unpaid" } = body;
+type ReqBody = {
+  additionalTickets?: number | string;
+  paymentStatus?: string;
+};
 
-        if (!mongoose.Types.ObjectId.isValid(bookingId)) {
-            return NextResponse.json({ error: "invalid  booking id" });
-        }
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  let session: mongoose.ClientSession | null = null;
 
-        if (!Number.isInteger(additionalTickets) || additionalTickets < 1) {
-            return NextResponse.json({ error: "additional Tickets must  be >= 1" }, { status: 400 });
-        }
+  try {
+    await connectToDatabase();
 
-        session = await mongoose.startSession();
-        session.startTransaction();
+    const { id: bookingId } = await params;
+    const body = (await req.json()) as ReqBody;
 
+    const additionalTickets = Number(body.additionalTickets ?? 0);
+    const paymentStatus = String(body.paymentStatus ?? "unpaid").toLowerCase();
 
-        const booking = await Booking.findById(bookingId).session(session);
+    if (!mongoose.Types.ObjectId.isValid(bookingId)) {
+      return NextResponse.json({ error: "Invalid booking id" }, { status: 400 });
+    }
 
-        if (!booking) {
-            await session.abortTransaction();
-            return NextResponse.json({ error: "booking not found " }, { status: 404 });
-        }
+    if (!Number.isInteger(additionalTickets) || additionalTickets < 1) {
+      return NextResponse.json(
+        { error: "additionalTickets must be an integer >= 1" },
+        { status: 400 }
+      );
+    }
 
-        const event = await Event.findOneAndUpdate(
-            { _id: booking.eventId, seatsAvailable: { $gte: additionalTickets } },
-            { $inc: { seatsAvailable: -additionalTickets } },
-            { new: true, session }
-        );
+    if (!["paid", "unpaid"].includes(paymentStatus)) {
+      return NextResponse.json(
+        { error: "paymentStatus must be 'paid' or 'unpaid'" },
+        { status: 400 }
+      );
+    }
 
-        if (!event) {
-            await session.abortTransaction();
-            return NextResponse.json({ error: "Not enough seats available" }, { status: 400 });
-        }
+    session = await mongoose.startSession();
+    session.startTransaction();
 
-        const ticketPrice = (event as any).price ?? 0;
-        const amountToAdd = ticketPrice * additionalTickets;
+    const booking = await Booking.findById(bookingId).session(session);
+    if (!booking) {
+      await session.abortTransaction();
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    }
 
+    const event = await Event.findOneAndUpdate(
+      { _id: booking.eventId, seatsAvailable: { $gte: additionalTickets } },
+      { $inc: { seatsAvailable: -additionalTickets } },
+      { new: true, session }
+    );
 
-        booking.tickets += additionalTickets;
-        booking.amount += amountToAdd;
+    if (!event) {
+      await session.abortTransaction();
+      return NextResponse.json(
+        { error: "Not enough seats available" },
+        { status: 400 }
+      );
+    }
 
+    const ticketPrice = typeof (event as any).price === "number"
+      ? (event as any).price
+      : Number((event as any).price) || 0;
+    const amountToAdd = ticketPrice * additionalTickets;
 
-        if (paymentStatus === "paid") {
-            booking.paymentStatus = "paid";
-            booking.status = "confirmed";
-        }
+    booking.tickets += additionalTickets;
+    booking.amount += amountToAdd;
 
-        await booking.save({ session });
-        await session.commitTransaction();
+    if (paymentStatus === "paid") {
+      booking.paymentStatus = "paid";
+      booking.status = "confirmed";
+    }
 
-        return NextResponse.json({ booking }, { status: 200 });
+    await booking.save({ session });
+    await session.commitTransaction();
 
+    const safeBooking = {
+      id: booking._id,
+      tickets: booking.tickets,
+      amount: booking.amount,
+      paymentStatus: booking.paymentStatus,
+      status: booking.status,
+      eventId: booking.eventId,
+    };
 
-    }  catch (err: any) {
-        console.error("add-tickets error:", err);
-        if (session) {
-          try {
-            await session.abortTransaction();
-          } catch (e) {
-            console.error("abort error:", e);
-          }
-        }
-        return NextResponse.json({ error: err?.message ?? "server error" }, { status: 500 });
-      } finally {
-        if (session) session.endSession();
+    return NextResponse.json({ booking: safeBooking }, { status: 200 });
+  } catch (err: any) {
+    console.error("add-tickets error:", err);
+    if (session) {
+      try {
+        await session.abortTransaction();
+      } catch (e) {
+        console.error("abort error:", e);
       }
+    }
+    return NextResponse.json(
+      { error: err?.message ?? "Server error" },
+      { status: 500 }
+    );
+  } finally {
+    if (session) session.endSession();
+  }
 }
-
