@@ -35,14 +35,11 @@ export default function HeroSection({
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-10 [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
 
       <div className="container relative mx-auto px-4 py-16 md:py-24 lg:py-12">
-        {/* ================================
-            HERO SECTION HEADINGS
-        =================================== */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-20 text-center"
+          className="mb-8 text-center py-20"
         >
           <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-sky-50 px-4 py-1.5 text-sm font-medium text-sky-700">
             <span className="relative flex h-2 w-2">
@@ -77,10 +74,6 @@ export default function HeroSection({
             </button>
           </div>
         </motion.div>
-
-        {/* ================================
-            FEATURE + LOGO + IMAGE SECTION
-        =================================== */}
         <div className="grid gap-10 lg:grid-cols-2">
           <div className="space-y-8">
             <div className="grid gap-6 sm:grid-cols-1">

@@ -120,19 +120,19 @@
     @apply bg-background text-foreground;
   }
 
-  main {
+  /* main {
     @apply mx-auto container flex flex-col sm:px-10 px-5 py-10;
-  }
+  } */
 
   h1 {
     @apply text-gradient text-6xl font-semibold max-sm:text-4xl;
   }
 
-  .h1-redish {
-    @apply bg-gradient-to-b from-white via-rose-300 to-red-600 bg-clip-text font-semibold text-transparent;
+  .h1-bluish {
+    @apply bg-gradient-to-b from-white via-blue-100 to-cyan-300 bg-clip-text font-semibold text-transparent;
   }
 
-
+  
   h3 {
     @apply font-schibsted-grotesk text-2xl font-bold;
   }
