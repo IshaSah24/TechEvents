@@ -35,7 +35,6 @@ export default async function EventPage({ params }: PageProps) {
   const { slug } = await params;
   await connectToDatabase();
 
-  //jwt token
   const  cookieStore  = cookies();
   const token  = (await cookieStore).get("token")?.value;
   const secret = process.env.JWT_SECRET;
@@ -58,7 +57,6 @@ export default async function EventPage({ params }: PageProps) {
     }
   }
 
-  // db  connection  and  events fetch 
 
   const event = (await Event.findOne({ slug }).lean()) as
     | (IEvent & { _id?: any })
