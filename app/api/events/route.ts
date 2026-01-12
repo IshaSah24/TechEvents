@@ -2,6 +2,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { Event } from "@/app/database";
 import { connectToDatabase } from "@/app/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
+import { getAllEvents } from '@/app/lib/events';
 
 function safeParseJSON<T = any>(val: unknown): T | undefined {
     if (val === undefined || val === null) return undefined;
@@ -137,8 +138,9 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
     try {
-        await connectToDatabase();
-        const event = await Event.find().sort({ createdAt: -1 });
+        // await connectToDatabase();
+        // const event = await Event.find().sort({ createdAt: -1 });
+        const events = await getAllEvents();
         return NextResponse.json({ message: "Event list retrieved successfully", event }, { status: 200 });
     } catch (e) {
         return NextResponse.json({ message: "Failed to get the events", error: e instanceof Error ? e.message : e }, { status: 500 });

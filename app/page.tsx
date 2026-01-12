@@ -1,17 +1,19 @@
 import HeroSection from "./HeroSection";    
 import AllEvents from "./components/AllEvents";
 import { IEvent } from "./database/events.model";
+import { getAllEvents } from "./lib/events";
 // import { events } from "./constants/eventsDummy";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 export default async function Page() {
-  const  response  = await fetch (`${BASE_URL}/api/events`);
-  const data   = await response.json();
-  console.log(data);
-  const events = data.event
+  // const  response  = await fetch (`${BASE_URL}/api/events`);
+  const events = await getAllEvents();
+  // const data   = await response.json();
+  // console.log(data);
+  // const events = data.event
   
-  
+   
   return (
     <main  className="w-full min-h-screen sm:px-10 px-5 mx-auto ">
       <HeroSection />
@@ -23,7 +25,7 @@ export default async function Page() {
         <ul className="flex gap-12 justify-center flex-wrap mt-8">
           {events && events.length > 0 && events.map((event : IEvent, index : any) => (
             <li key={index} className="list-none">
-              <AllEvents {...event} />
+              <AllEvents {...event}  slug={event.slug} />
             </li>
           ))}
         </ul>
