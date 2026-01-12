@@ -60,7 +60,7 @@ UserSchema.methods.comparePassword = async function (this: IUser, candidatePassw
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-UserSchema.index({ email: 1 }, { unique: true });
+// UserSchema.index({ email: 1 }, { unique: true });
 UserSchema.index({ name: 1 });
 
 const User = models.User || model<IUser>('User', UserSchema);
